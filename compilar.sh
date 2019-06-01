@@ -1,3 +1,3 @@
 #!/bin/sh
-g++ algoritpares.cpp -o algoritpares -fopenmp
-./algoritpares
+g++ algoritparejas.cpp -o algoritparejas -fopenmp
+./algoritparejas
