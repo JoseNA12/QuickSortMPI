@@ -24,7 +24,7 @@ using namespace std::chrono;
 */
 
 // -------------------- Define --------------------
-int cant_numerosRandoms = 9000;//90000000;
+int cant_numerosRandoms = 90000000;
 int tope = 1020;
 int num_hilos = 4;
 // ------------------------------------------------
