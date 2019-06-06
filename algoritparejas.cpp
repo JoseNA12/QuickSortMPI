@@ -1,17 +1,25 @@
-#include <stdio.h>          /* printf, scanf, puts, NULL */
-#include <stdlib.h>         /* srand, rand */
-#include <time.h>           /* time */
+/*
+    Instituto Tecnológico de Costa Rica.
+    José Navarro y Josué Suárez.
+    Principios de Sistemas Operativos.
+    Buscador de números pareja.
+    2019.
+*/
+
+#include <cstdio>          /* printf, scanf, puts, NULL */
+#include <cstdlib>         /* srand, rand */
+//#include <ctime>           /* time */
 #include <iostream>          
 #include <vector>
 #include <bits/stdc++.h>    /* tuple */
-#include <chrono>           /* high_resolution_clock, duration_cast */
+//#include <chrono>           /* high_resolution_clock, duration_cast */
+#include "timer.h"
 
 //#include "mpi.h" // OpenMPI
 #include <omp.h> // OPenMP
 
 
 using namespace std;
-using namespace std::chrono;
 
 /*
     - OpenMPI: sudo apt install libopenmpi-dev (aun no se usa)
@@ -24,14 +32,15 @@ using namespace std::chrono;
 */
 
 // -------------------- Define --------------------
-int cant_numerosRandoms = 90000000;
+int cant_numerosRandoms = 1000000; //90000000;
 int tope = 1020;
-int num_hilos = 4;
+int num_hilos = 2;
+double elapsedTime = 0;
 // ------------------------------------------------
 
 // -------------------- Firmas de funciones --------------------
-vector<vector<int>> getListaNumerosRan();
-vector<tuple<int, int>> getParejas(vector<vector<int>> pMatriz);
+vector<vector<int> > getListaNumerosRan();
+vector<tuple<int, int> > getParejas(vector<vector<int> > pMatriz);
 // -------------------------------------------------------------
 
 /*
@@ -39,9 +48,9 @@ vector<tuple<int, int>> getParejas(vector<vector<int>> pMatriz);
     La cantidad y longitud de las filas esta definida por el numero de CPU's,
     siendo la longitud multiplicada por 255 (por defecto).
 */
-vector<vector<int>> getListaNumerosRan() {
-    srand(time(NULL));
-    vector<vector<int>> matriz;
+vector<vector<int> > getListaNumerosRan() {
+    srand48((unsigned) time(0));
+    vector<vector<int> > matriz;
 
     omp_set_num_threads(num_hilos);
 
@@ -54,14 +63,15 @@ vector<vector<int>> getListaNumerosRan() {
 
         #pragma omp for  // dividir entre los hilos las iteraciones del for
         for (int i = 0; i < cant_numerosRandoms; i++) { // cant_numerosRandoms es dividada entre el numero de hilos
-            matriz[omp_get_thread_num()].push_back(rand() % tope + 1);
+            int num = lrand48() % tope + 1;
+            matriz[omp_get_thread_num()].push_back(num); 
         }
     }
     return matriz;
 }
 
-vector<tuple<int, int>> getParejas(vector<vector<int>> pMatriz) {
-    vector<tuple<int, int>> parejas;
+vector<tuple<int, int> > getParejas(vector<vector<int> > pMatriz) {
+    vector<tuple<int, int> > parejas;
 
     omp_set_num_threads(num_hilos);
 
@@ -90,6 +100,7 @@ vector<tuple<int, int>> getParejas(vector<vector<int>> pMatriz) {
                         }
                         pMatriz[num_hilo][pos_actual] = -1;
                         pMatriz[num_hilo][pos_busqueda] = -1;
+                        break;
                     }
                     pos_busqueda++;
                 }
@@ -101,14 +112,14 @@ vector<tuple<int, int>> getParejas(vector<vector<int>> pMatriz) {
 }
 
 void ejecutarAlgoritmo() {
-    vector<tuple<int, int>> result;
-
-    auto inicio = high_resolution_clock::now(); // punto inicial de tiempo
+    vector<tuple<int, int> > result;
+    
+	timerStart(); // starting timer
+    //getListaNumerosRan();
     result = getParejas(getListaNumerosRan());
-    auto fin = high_resolution_clock::now(); // punto final de tiempo 
-    auto duration = duration_cast<microseconds>(fin - inicio);
+	elapsedTime = timerStop(); // stopping timer
 
-    cout << "Tiempo de ejecución: " << (duration.count() * 0.000001) << " segundos" << endl;
+    cout << "Tiempo de ejecución: " << elapsedTime << " segundos" << endl;
     cout << "Numero de hilos empleados: " << num_hilos << endl;
     cout << "Total de números generados: " << cant_numerosRandoms << endl;
     cout << "Total de parejas: " << (int) result.size() << endl;
@@ -122,8 +133,9 @@ int main(int argc, char *argv[])
     if (argc > 2) {
         num_hilos = atoi(argv[2]);
     }
+    
+    ejecutarAlgoritmo(); 
 
-    ejecutarAlgoritmo();
     return 0;
 }
 
